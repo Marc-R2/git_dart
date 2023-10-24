@@ -2,29 +2,27 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:git/src/bot.dart';
+import 'package:git/src/branch_reference.dart';
+import 'package:git/src/commit.dart';
+import 'package:git/src/commit_reference.dart';
+import 'package:git/src/git_error.dart';
+import 'package:git/src/tag.dart';
+import 'package:git/src/top_level.dart';
+import 'package:git/src/tree_entry.dart';
+import 'package:git/src/util.dart';
 import 'package:path/path.dart' as p;
-
-import 'bot.dart';
-import 'branch_reference.dart';
-import 'commit.dart';
-import 'commit_reference.dart';
-import 'git_error.dart';
-import 'tag.dart';
-import 'top_level.dart';
-import 'tree_entry.dart';
-import 'util.dart';
 
 /// Represents a local directory
 class GitDir {
+  GitDir._raw(this._path, [this._gitWorkTree])
+      : assert(p.isAbsolute(_path)),
+        assert(_gitWorkTree == null || p.isAbsolute(_gitWorkTree));
   static const _workTreeArg = '--work-tree=';
   static const _gitDirArg = '--git-dir=';
 
   final String _path;
   final String? _gitWorkTree;
-
-  GitDir._raw(this._path, [this._gitWorkTree])
-      : assert(p.isAbsolute(_path)),
-        assert(_gitWorkTree == null || p.isAbsolute(_gitWorkTree));
 
   String get path => _path;
 
@@ -67,7 +65,7 @@ class GitDir {
   Stream<Tag> tags() async* {
     final refs = await showRef(tags: true);
 
-    for (var ref in refs) {
+    for (final ref in refs) {
       final pr = await runCommand(['cat-file', '-p', ref.sha]);
       yield Tag.parseCatFile(pr.stdout as String);
     }
@@ -406,7 +404,7 @@ class GitDir {
     }
   }
 
-  String get _processWorkingDir => _path.toString();
+  String get _processWorkingDir => _path;
 
   static Future<bool> isGitDir(String path) async {
     final dir = Directory(path);
@@ -455,7 +453,7 @@ class GitDir {
 
     final pr = await runGit(
       ['rev-parse', '--git-dir'],
-      processWorkingDir: path.toString(),
+      processWorkingDir: path,
     );
 
     var returnedPath = (pr.stdout as String).trim();

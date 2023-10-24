@@ -1,21 +1,20 @@
 import 'dart:convert';
 
-import 'branch_reference.dart';
-import 'util.dart';
+import 'package:git/src/branch_reference.dart';
+import 'package:git/src/util.dart';
 
 /// Represents the output from `git show-ref`
 class CommitReference {
-  static final RegExp _lsRemoteRegExp = RegExp('^($shaRegexPattern) (.+)\$');
-
-  final String sha;
-  final String reference;
-
   CommitReference(this.sha, this.reference) {
     requireArgumentValidSha1(sha, 'sha');
 
     // TODO: probably a better way to verify...but this is fine for now
     assert(reference.startsWith('refs/') || reference == 'HEAD');
   }
+  static final RegExp _lsRemoteRegExp = RegExp('^($shaRegexPattern) (.+)\$');
+
+  final String sha;
+  final String reference;
 
   static List<CommitReference> fromShowRefOutput(String input) {
     final lines = const LineSplitter().convert(input);

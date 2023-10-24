@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'util.dart';
+import 'package:git/src/util.dart';
 
 // ignore: prefer_interpolation_to_compose_strings
 final _shaRegEx = RegExp('^' + shaRegexPattern + r'$');

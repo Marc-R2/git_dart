@@ -217,7 +217,7 @@ Future<void> _testGetCommits() async {
   final branches = await gitDir.branches();
   expect(branches, isEmpty);
 
-  for (var commitStr in commitText) {
+  for (final commitStr in commitText) {
     final fileMap = <String, String>{};
     fileMap['$commitStr.txt'] = '$commitStr content';
 
@@ -235,7 +235,7 @@ Future<void> _testGetCommits() async {
 
   final indexMap = <int, MapEntry<String, Commit>>{};
 
-  for (var entry in commits.entries) {
+  for (final entry in commits.entries) {
     // index into the text for the message of this commit
     final commitMessageIndex =
         commitMessages.indexWhere((element) => element == entry.value.message);
@@ -250,7 +250,7 @@ Future<void> _testGetCommits() async {
     indexMap[commitMessageIndex] = MapEntry(entry.key, entry.value);
   }
 
-  for (var entry in indexMap.entries) {
+  for (final entry in indexMap.entries) {
     if (entry.key > 0) {
       expect(
         entry.value.value.parents,
@@ -290,7 +290,7 @@ Future<void> _doDescriptorPopulate(
   String dirPath,
   Map<String, String> contents,
 ) async {
-  for (var name in contents.keys) {
+  for (final name in contents.keys) {
     final value = contents[name]!;
 
     final fullPath = p.join(dirPath, name);

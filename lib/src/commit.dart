@@ -1,17 +1,10 @@
 import 'dart:collection';
 
-import 'bot.dart';
-import 'util.dart';
+import 'package:git/src/bot.dart';
+import 'package:git/src/util.dart';
 
 /// Represents a Git commit object.
 class Commit {
-  final String treeSha;
-  final String author;
-  final String committer;
-  final String message;
-  final String content;
-  final List<String> parents;
-
   Commit._(
     this.treeSha,
     this.author,
@@ -28,6 +21,12 @@ class Commit {
     // null checks on many things
     // unique checks on parents
   }
+  final String treeSha;
+  final String author;
+  final String committer;
+  final String message;
+  final String content;
+  final List<String> parents;
 
   static Commit parse(String content) {
     final stringLineReader = StringLineReader(content);
@@ -71,7 +70,7 @@ class Commit {
         headers.putIfAbsent(header, () => <String>[]).add(value);
       }
 
-      lastLine = slr.readNextLine()!;
+      lastLine = slr.readNextLine();
     }
 
     assert(lastLine!.isEmpty);

@@ -43,17 +43,15 @@ void metaRequireArgumentNotNullOrEmpty(String argName) {
 }
 
 class _InvalidOperationError implements Exception {
-  final String message;
-
   const _InvalidOperationError([this.message = '']);
+  final String message;
 }
 
 class StringLineReader {
+  StringLineReader(this.source);
   final String source;
 
   int? _position = 0;
-
-  StringLineReader(this.source);
 
   int? get position => _position;
 

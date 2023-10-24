@@ -1,5 +1,5 @@
-import 'bot.dart';
-import 'top_level.dart';
+import 'package:git/src/bot.dart';
+import 'package:git/src/top_level.dart';
 
 const shaRegexPattern = '[a-f0-9]{40}';
 
