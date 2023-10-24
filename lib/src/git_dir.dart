@@ -11,6 +11,7 @@ import 'package:git/src/tag.dart';
 import 'package:git/src/top_level.dart';
 import 'package:git/src/tree_entry.dart';
 import 'package:git/src/util.dart';
+import 'package:git/src/working_tree/commit.dart';
 import 'package:path/path.dart' as p;
 
 /// Represents a local directory
@@ -34,9 +35,9 @@ class GitDir {
   /// [revision] should probably be a sha1 to a commit.
   /// But GIT lets you do other things.
   /// See http://git-scm.com/docs/gitrevisions.html
-  Future<Commit> commitFromRevision(String revision) async {
+  Future<CommitObject> commitFromRevision(String revision) async {
     final pr = await runCommand(['cat-file', '-p', revision]);
-    return Commit.parse(pr.stdout as String);
+    return Commit.parse(pr.stdout as String).asCommitObject(this);
   }
 
   Future<Map<String, Commit>> commits([String branchName = 'HEAD']) async {
@@ -177,9 +178,7 @@ class GitDir {
     String commitMessage,
   ) async {
     final commitObj = await commitFromRevision(targetBranchSha);
-    if (commitObj.treeSha == treeSha) {
-      return null;
-    }
+    if (commitObj.sha == treeSha) return null;
 
     return commitTree(
       treeSha,
@@ -298,7 +297,7 @@ class GitDir {
   /// [branchName], then no [Commit] is created and `null` is returned.
   ///
   /// If no content is added to the directory, an error is thrown.
-  Future<Commit?> updateBranch(
+  Future<CommitObject?> updateBranch(
     String branchName,
     Future<void> Function(Directory td) populater,
     String commitMessage,
@@ -313,18 +312,19 @@ class GitDir {
 
     try {
       await populater(tempContentRoot);
-      final commit = await updateBranchWithDirectoryContents(
+      // This await before the return is necessary to ensure that the
+      // the try block can catch errors - didn't know that before.
+      return await updateBranchWithDirectoryContents(
         branchName,
         tempContentRoot.path,
         commitMessage,
       );
-      return commit;
     } finally {
       await tempContentRoot.delete(recursive: true);
     }
   }
 
-  Future<Commit?> updateBranchWithDirectoryContents(
+  Future<CommitObject?> updateBranchWithDirectoryContents(
     String branchName,
     String sourceDirectoryPath,
     String commitMessage,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:git/git.dart';
+import 'package:git/src/working_tree/commit.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:test_descriptor/test_descriptor.dart' as d;
@@ -34,7 +35,7 @@ void main() {
     // sha for the new commit
     final newSha = await gitDir.createOrUpdateBranch(
       'test',
-      commit.treeSha,
+      commit.sha,
       'copy of master',
     );
 
@@ -46,7 +47,7 @@ void main() {
     expect(treeItems, hasLength(2));
 
     final libTreeEntry = treeItems.singleWhere((tree) => tree.name == 'lib');
-    expect(libTreeEntry.type, 'tree');
+    expect(libTreeEntry.type, TreeEntryType.tree);
 
     // do another update from the subtree sha
     final nextCommit = await gitDir.createOrUpdateBranch(
@@ -369,7 +370,7 @@ void _testPopulateBranchEmpty(GitDir gitDir, String branchName) {
   );
 }
 
-Future<MapEntry<Commit?, int>> _testPopulateBranchCore(
+Future<MapEntry<CommitObject?, int>> _testPopulateBranchCore(
   GitDir gitDir,
   String branchName,
   Map<String, String> contents,
@@ -426,12 +427,12 @@ Future<void> _testPopulateBranchWithContent(
 
   if (originalCommitCount == 0) {
     expect(
-      returnedCommit.parents,
+      returnedCommit.parentShas,
       isEmpty,
       reason: 'This should be the first commit',
     );
   } else {
-    expect(returnedCommit.parents, hasLength(1));
+    expect(returnedCommit.parentShas, hasLength(1));
   }
 
   expect(returnedCommit, isNotNull, reason: 'Commit should not be null');
@@ -448,7 +449,7 @@ Future<void> _testPopulateBranchWithContent(
     reason: 'content of queried commit should what was returned',
   );
 
-  final entries = await gitDir.lsTree(commit.treeSha);
+  final entries = await gitDir.lsTree(commit.sha);
 
   expect(entries.map((te) => te.name), unorderedEquals(contents.keys));
 

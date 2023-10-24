@@ -1,10 +1,19 @@
 import 'dart:collection';
 
+import 'package:git/git.dart';
 import 'package:git/src/bot.dart';
 import 'package:git/src/util.dart';
+import 'package:git/src/working_tree/commit.dart';
 
 /// Represents a Git commit object.
 class Commit {
+  factory Commit.parse(String content) {
+    final stringLineReader = StringLineReader(content);
+    final tuple = _parse(stringLineReader, false);
+    assert(tuple.key == null);
+    return tuple.value;
+  }
+
   Commit._(
     this.treeSha,
     this.author,
@@ -21,19 +30,13 @@ class Commit {
     // null checks on many things
     // unique checks on parents
   }
+
   final String treeSha;
   final String author;
   final String committer;
   final String message;
   final String content;
   final List<String> parents;
-
-  static Commit parse(String content) {
-    final stringLineReader = StringLineReader(content);
-    final tuple = _parse(stringLineReader, false);
-    assert(tuple.key == null);
-    return tuple.value;
-  }
 
   static Map<String, Commit> parseRawRevList(String content) {
     final slr = StringLineReader(content);
@@ -101,8 +104,7 @@ class Commit {
     final treeSha = headers['tree']!.single;
     final author = headers['author']!.single;
     final committer = headers['committer']!.single;
-    final commitSha =
-        headers.containsKey('commit') ? headers['commit']!.single : null;
+    final commitSha = headers['commit']?.single;
 
     final parents = headers['parent'] ?? [];
 
@@ -113,6 +115,18 @@ class Commit {
     return MapEntry(
       commitSha,
       Commit._(treeSha, author, committer, message, content, parents),
+    );
+  }
+
+  CommitObject asCommitObject(GitDir git) {
+    return CommitObject(
+      git: git,
+      sha: treeSha,
+      author: author,
+      committer: committer,
+      content: content,
+      message: message,
+      parentShas: parents,
     );
   }
 }
