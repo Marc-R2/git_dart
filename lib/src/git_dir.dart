@@ -37,12 +37,12 @@ class GitDir {
   /// See http://git-scm.com/docs/gitrevisions.html
   Future<CommitObject> commitFromRevision(String revision) async {
     final pr = await runCommand(['cat-file', '-p', revision]);
-    return Commit.parse(pr.stdout as String).asCommitObject(this);
+    return Commit.parse(pr.stdout as String, this);
   }
 
-  Future<Map<String, Commit>> commits([String branchName = 'HEAD']) async {
+  Future<List<CommitObject>> commits([String branchName = 'HEAD']) async {
     final pr = await runCommand(['rev-list', '--format=raw', branchName]);
-    return Commit.parseRawRevList(pr.stdout as String);
+    return Commit.parseRawRevList(pr.stdout as String, this);
   }
 
   Future<BranchReference?> branchReference(String branchName) async {
@@ -178,7 +178,7 @@ class GitDir {
     String commitMessage,
   ) async {
     final commitObj = await commitFromRevision(targetBranchSha);
-    if (commitObj.sha == treeSha) return null;
+    if (commitObj.treeSha == treeSha) return null;
 
     return commitTree(
       treeSha,

@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:git/git.dart';
 import 'package:git/src/bot.dart';
 import 'package:git/src/util.dart';
@@ -7,53 +5,34 @@ import 'package:git/src/working_tree/commit.dart';
 
 /// Represents a Git commit object.
 class Commit {
-  factory Commit.parse(String content) {
+  static CommitObject parse(String content, GitDir git) {
     final stringLineReader = StringLineReader(content);
-    final tuple = _parse(stringLineReader, false);
-    assert(tuple.key == null);
-    return tuple.value;
+    return _parse(stringLineReader, false, git);
   }
 
-  Commit._(
-    this.treeSha,
-    this.author,
-    this.committer,
-    this.message,
-    this.content,
-    List<String> parents,
-  ) : parents = UnmodifiableListView<String>(parents) {
-    requireArgumentValidSha1(treeSha, 'treeSha');
-    for (final parent in parents) {
-      requireArgumentValidSha1(parent, 'parents');
-    }
-
-    // null checks on many things
-    // unique checks on parents
-  }
-
-  final String treeSha;
-  final String author;
-  final String committer;
-  final String message;
-  final String content;
-  final List<String> parents;
-
-  static Map<String, Commit> parseRawRevList(String content) {
+  static List<CommitObject> parseRawRevList(String content, GitDir git) {
     final slr = StringLineReader(content);
 
-    final commits = <String, Commit>{};
+    final commits = <CommitObject>[];
 
     while (slr.position != null && slr.position! < content.length) {
-      final tuple = _parse(slr, true);
-      commits[tuple.key!] = tuple.value;
+      commits.add(_parse(slr, true, git));
     }
 
     return commits;
   }
 
-  static MapEntry<String?, Commit> _parse(
+  static void checkHashes(CommitObject commit) {
+    final shas = [commit.treeSha, ...commit.parentShas];
+    if (shas.any((sha) => !isValidSha(sha))) {
+      throw StateError('Invalid SHA found in commit: $commit');
+    }
+  }
+
+  static CommitObject _parse(
     StringLineReader slr,
     bool isRevParse,
+    GitDir git,
   ) {
     assert(slr.position != null);
 
@@ -112,21 +91,17 @@ class Commit {
 
     final content = slr.source.substring(startSpot, endSpot);
 
-    return MapEntry(
-      commitSha,
-      Commit._(treeSha, author, committer, message, content, parents),
-    );
-  }
-
-  CommitObject asCommitObject(GitDir git) {
-    return CommitObject(
+    final commit = CommitObject(
       git: git,
-      sha: treeSha,
+      commitSha: commitSha,
+      treeSha: treeSha,
       author: author,
       committer: committer,
       content: content,
       message: message,
       parentShas: parents,
     );
+    checkHashes(commit);
+    return commit;
   }
 }

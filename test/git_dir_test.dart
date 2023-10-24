@@ -35,7 +35,7 @@ void main() {
     // sha for the new commit
     final newSha = await gitDir.createOrUpdateBranch(
       'test',
-      commit.sha,
+      commit.treeSha,
       'copy of master',
     );
 
@@ -234,12 +234,12 @@ Future<void> _testGetCommits() async {
 
   final commitMessages = commitText.map(msgFromText).toList();
 
-  final indexMap = <int, MapEntry<String, Commit>>{};
+  final indexMap = <int, CommitObject>{};
 
-  for (final entry in commits.entries) {
+  for (final entry in commits) {
     // index into the text for the message of this commit
     final commitMessageIndex =
-        commitMessages.indexWhere((element) => element == entry.value.message);
+        commitMessages.indexWhere((element) => element == entry.message);
 
     expect(
       commitMessageIndex,
@@ -248,17 +248,17 @@ Future<void> _testGetCommits() async {
     );
 
     expect(indexMap, isNot(contains(commitMessageIndex)));
-    indexMap[commitMessageIndex] = MapEntry(entry.key, entry.value);
+    indexMap[commitMessageIndex] = entry;
   }
 
   for (final entry in indexMap.entries) {
     if (entry.key > 0) {
       expect(
-        entry.value.value.parents,
-        unorderedEquals([indexMap[entry.key - 1]!.key]),
+        entry.value.parentShas,
+        unorderedEquals([indexMap[entry.key - 1]!.commitSha]),
       );
     } else {
-      expect(entry.value.value.parents, hasLength(0));
+      expect(entry.value.parentShas, hasLength(0));
     }
   }
 }
@@ -449,7 +449,7 @@ Future<void> _testPopulateBranchWithContent(
     reason: 'content of queried commit should what was returned',
   );
 
-  final entries = await gitDir.lsTree(commit.sha);
+  final entries = await gitDir.lsTree(commit.treeSha);
 
   expect(entries.map((te) => te.name), unorderedEquals(contents.keys));
 

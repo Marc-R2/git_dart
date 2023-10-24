@@ -7,4 +7,9 @@ class BlobObject extends WorkingTreeObject {
     required super.mode,
     required super.name,
   });
+
+  @override
+  String toString() {
+    return 'BlobObject{name: $name, mode: $mode, sha: ${sha.substring(0, 6)}}';
+  }
 }
